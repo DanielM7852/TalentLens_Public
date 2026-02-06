@@ -17,5 +17,5 @@ with pdfplumber.open("data/resume-dataset/data/data/ENGINEERING/10030015.pdf") a
         raw_content += page.extract_text()
     
     clean_content = clean_text(raw_content)
-    
-    #print(clean_content[:500]) #tester 
+
+    print(clean_content[:500]) #tester 
