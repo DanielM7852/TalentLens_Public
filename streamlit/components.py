@@ -313,79 +313,6 @@ def render_results(results: list[ResumeResult]):
             _render_detail_panel(r)
 
 
-def _render_metric_section(
-    title: str,
-    label_to_key_weight: dict[str, tuple[str, int]],
-    breakdown: dict,
-) -> None:
-    """Render a subsection of scores (e.g. job match or resume quality) with weights."""
-    if not breakdown:
-        return
-    st.markdown(f"**{title}**")
-    # Scores from Grok are 0-10
-    for label, (key, weight_pct) in label_to_key_weight.items():
-        raw = breakdown.get(key)
-        try:
-            val = float(raw) if raw is not None else None
-        except (TypeError, ValueError):
-            val = None
-        if val is not None:
-            score_10 = max(0.0, min(10.0, val))
-            bar_color = COLORS["score_green"] if score_10 >= 7 else (COLORS["score_yellow"] if score_10 >= 4 else COLORS["score_red"])
-            st.markdown(
-                f'<div style="margin-bottom:0.35rem; font-size:0.9rem;">'
-                f'<span style="opacity:0.9;">{label}</span> '
-                f'<span style="color:{bar_color}; font-weight:600;">{score_10:.1f}/10</span> '
-                f'<span style="opacity:0.6; font-size:0.8rem;">(weight {weight_pct}%)</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-    st.markdown("")  # spacing
-
-
-def _render_ranking_formula(details: dict) -> None:
-    if not details:
-        return
-
-    st.markdown("#### Ranking Formula")
-    formula_cols = st.columns(4)
-    formula_cols[0].metric("Base Search", f"{float(details.get('base_search_score', 0.0)):.2f}/10")
-
-    if details.get("job_match_score") is not None:
-        formula_cols[1].metric("Job Match", f"{float(details.get('job_match_score', 0.0)):.2f}/10")
-    else:
-        formula_cols[1].metric("Job Match", "N/A")
-
-    if details.get("resume_quality_score") is not None:
-        formula_cols[2].metric("Resume Quality", f"{float(details.get('resume_quality_score', 0.0)):.2f}/10")
-    else:
-        formula_cols[2].metric("Resume Quality", "N/A")
-
-    if details.get("penalty_applied") is not None:
-        formula_cols[3].metric("Penalty", f"-{float(details.get('penalty_applied', 0.0)):.2f}/10")
-    else:
-        formula_cols[3].metric("Penalty", "0.00/10")
-
-    mode = details.get("mode", "")
-    if mode:
-        st.caption(f"Ranking mode: `{mode}`")
-
-    matched_skill_count = details.get("matched_skill_count")
-    matched_skill_ratio = details.get("matched_skill_ratio")
-    if matched_skill_count is not None:
-        ratio_text = ""
-        if matched_skill_ratio is not None:
-            ratio_text = f" ({float(matched_skill_ratio) * 100:.0f}% of query skills)"
-        st.markdown(f"**Matched skills used in ranking:** {int(matched_skill_count)}{ratio_text}")
-
-    hard_fail_count = details.get("hard_fail_count")
-    revision_flag_count = details.get("revision_flag_count")
-    if hard_fail_count is not None or revision_flag_count is not None:
-        st.markdown(
-            f"**Penalty drivers:** {int(hard_fail_count or 0)} hard-fail flags, "
-            f"{int(revision_flag_count or 0)} revision flags"
-        )
-
 def _render_detail_panel(r: ResumeResult):
     col1, col2 = st.columns(2)
     with col1:
@@ -397,123 +324,52 @@ def _render_detail_panel(r: ResumeResult):
             st.markdown(f'<span class="detail-label">Graduation:</span> <span class="detail-value">{r.graduation_year}</span>', unsafe_allow_html=True)
 
     with col2:
-        if r.local_resume_path:
-            st.markdown(
-                f'<span class="detail-label">Local Resume:</span> <span class="detail-value">{Path(r.local_resume_path).name}</span>',
-                unsafe_allow_html=True,
-            )
-        if r.resume_link:
+        if r.resume_link and str(r.resume_link).lower() != "nan":
             st.markdown(f'<span class="detail-label">Resume:</span> <a href="{r.resume_link}" target="_blank" class="open-link">Open PDF &rarr;</a>', unsafe_allow_html=True)
-        if r.linkedin:
+        if r.linkedin and str(r.linkedin).lower() != "nan":
             st.markdown(f'<span class="detail-label">LinkedIn:</span> <a href="{r.linkedin}" target="_blank" class="open-link">Profile &rarr;</a>', unsafe_allow_html=True)
-        if r.github:
+        if r.github and str(r.github).lower() != "nan":
             st.markdown(f'<span class="detail-label">GitHub:</span> <a href="{r.github}" target="_blank" class="open-link">Profile &rarr;</a>', unsafe_allow_html=True)
-
-    if r.local_resume_path:
-        pdf_path = Path(r.local_resume_path)
-        pdf_bytes = pdf_path.read_bytes()
-        pdf_b64 = base64.b64encode(pdf_bytes).decode()
-        st.markdown(
-            f"""
-            <div style="margin-top:0.8rem; margin-bottom:0.5rem; font-size:0.85rem; opacity:0.8;">
-                Resume Preview
-            </div>
-            <iframe
-                src="data:application/pdf;base64,{pdf_b64}"
-                width="100%"
-                height="900"
-                style="border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:white;"
-            ></iframe>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    if r.matched_skills:
-        skills_html = "".join(f'<span class="matched-skill">{s}</span>' for s in r.matched_skills)
-        st.markdown(
-            f'<div style="margin-top:0.6rem;"><span class="detail-label">Matched Skills:</span><br/>{skills_html}</div>',
-            unsafe_allow_html=True,
-        )
-
-    ranking_details = getattr(r, "ranking_details", {}) or {}
-    if ranking_details or r.recruiter_score or r.resume_quality_score or r.semantic_score:
-        st.markdown("### Score Breakdown")
-        score_cols = st.columns(4)
-        score_cols[0].metric("Combined Score", f"{r.score:.3f}")
-        score_cols[1].metric("Base Search", f"{r.semantic_score:.3f}")
-        score_cols[2].metric("Job Match", f"{r.recruiter_score:.1f}/10")
-        score_cols[3].metric("Resume Quality", f"{r.resume_quality_score:.1f}/10")
-
-        _render_ranking_formula(ranking_details)
-
-        # Section-based metrics that explain why the resume is ranked this way
-        recruiter_breakdown = getattr(r, "recruiter_breakdown", {}) or {}
-        quality_breakdown = getattr(r, "resume_quality_breakdown", {}) or {}
-        if recruiter_breakdown or quality_breakdown:
-            st.markdown("#### Why this rank — metrics by section")
-            _render_metric_section(
-                "Job match (vs job description)",
-                {
-                    "Impact": ("impact_score", 35),
-                    "Technology fit": ("technology_fit_score", 35),
-                    "Keyword alignment": ("keyword_alignment_score", 20),
-                    "Role fit": ("role_fit_score", 10),
-                },
-                recruiter_breakdown,
-            )
-            _render_metric_section(
-                "Resume quality (ATS & content)",
-                {
-                    "ATS format": ("ats_format_score", 18),
-                    "Section quality": ("section_quality_score", 12),
-                    "Bullet quality": ("bullet_quality_score", 20),
-                    "Technical relevance": ("technical_relevance_score", 22),
-                    "Truthfulness": ("truthfulness_score", 18),
-                    "Project strength": ("project_strength_score", 10),
-                },
-                quality_breakdown,
-            )
-
-    if r.hard_fail_flags:
-        st.error("Hard-fail risks: " + ", ".join(r.hard_fail_flags))
-
-    if r.resume_flags:
-        st.warning("Revision flags: " + ", ".join(r.resume_flags))
 
     rubric = getattr(r, "resume_quality_breakdown", {}) or {}
     if rubric:
         strengths = rubric.get("strengths", [])
-        risks = rubric.get("risks", [])
-        summary = rubric.get("summary", "")
-        if summary:
-            st.markdown(f"**Resume Summary:** {summary}")
         if strengths:
             st.markdown("**Strengths**")
             for item in strengths:
                 st.markdown(f"- {item}")
-        if risks:
-            st.markdown("**Risks**")
-            for item in risks:
-                st.markdown(f"- {item}")
 
     explanation = getattr(r, "explanation", "")
     if explanation:
+        import re
+        # Convert markdown bold to HTML bold
+        formatted = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", explanation)
+        
+        # Clean up the format: Put items on sep lines, remove leading hyphens/bullets
+        # Expected from Grok: "- **Target**: Content - **Target**: Content"
+        # We want: "<b>Target</b>: Content <br/> <b>Target</b>: Content"
+        
+        # 1. Remove leading hyphen if exists at the very start
+        formatted = formatted.lstrip("- ").lstrip("• ")
+        
+        # 2. Match known bullet patterns and replace with <br/> while removing the hyphen
+        # Handles " - <b>", " - **", etc.
+        formatted = re.sub(r"\s*-\s*<b>", "<br/><b>", formatted)
+        formatted = re.sub(r"\s*-\s*\*\*", "<br/>**", formatted)
+        
         st.markdown(
             f"""
-            <div style="margin-top:1rem; padding:0.8rem; background:rgba(121, 40, 202, 0.1); border-left:3px solid #7928ca; border-radius:4px;">
-                <div style="font-size:0.8rem; font-weight:600; color:#7928ca; margin-bottom:0.3rem;">
-                    ✨ Grok AI Match Analysis
+            <div style="margin-top:1.2rem; padding:1.2rem; background:rgba(121, 40, 202, 0.15); border-left:4px solid #a855f7; border-radius:8px; color:#ffffff;">
+                <div style="font-size:1.15rem; font-weight:800; color:#a855f7; margin-bottom:0.8rem; letter-spacing:0.5px; text-transform:uppercase;">
+                    Match Analysis:
                 </div>
-                <div style="font-size:0.9rem; font-style:italic; line-height:1.4;">
-                    "{r.explanation}"
+                <div style="font-size:1.05rem; line-height:1.6; font-family:inherit;">
+                    {formatted}
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-
-    if r.text_preview:
-        st.markdown(f'<div class="text-preview">{r.text_preview}</div>', unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------

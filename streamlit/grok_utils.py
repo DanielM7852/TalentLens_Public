@@ -195,11 +195,13 @@ def get_explanation_with_grok(job_description: str, candidate_text: str, candida
         client = _build_client(api_key)
 
         prompt = (
-            f"Write a recruiter-facing match summary for {candidate_name}. In 2-3 concise "
-            "sentences, explain how the candidate stacks up against the job description using "
-            "this rubric in order: impact and measurable outcomes, relevance of technologies "
-            "used, and keyword/role alignment. Sound like a seasoned technical recruiter: "
-            "specific, evidence-based, and balanced. If there is a material gap, mention it briefly.\n\n"
+            f"Write a recruiter-facing match summary for {candidate_name}. "
+            "Explain how the candidate stacks up against the job description in exactly two short bullet points. "
+            "The first bullet MUST start with '- **Core Matching Skills**:' and focus on high-signal technical alignment. "
+            "The second bullet MUST start with '- **Relevant Experience**:' and focus ONLY on technical internships or projects, "
+            "measurable impact, and evidence of owning production code. "
+            "Sound like a seasoned technical recruiter: specific, evidence-based, and extremely concise. "
+            "Do NOT mention college or soft skills.\n\n"
             f"Job Description:\n{job_description[:1200]}\n\n"
             f"Candidate Resume Content:\n{candidate_text[:2500]}"
         )

@@ -147,7 +147,7 @@ if search_clicked:
         
         # --- Generate Grok Explanations for Top 3 ---
         if results:
-            with st.spinner("Generating Grok AI match analysis..."):
+            with st.spinner("Generating resume Match Analysis:"):
                 for res in results[:3]:
                     res.explanation = get_explanation_with_grok(
                         job_description=query,
