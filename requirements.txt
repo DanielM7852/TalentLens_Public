@@ -20,6 +20,7 @@ pydantic
 
 # Streamlit UI (streamlit/)
 streamlit
+altair>=4.0,<5  # Streamlit requires altair.vegalite.v4 (removed in Altair 5+)
 
 # Reddit scraping (data/reddit/data.ipynb)
 requests
