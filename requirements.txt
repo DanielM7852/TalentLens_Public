@@ -19,7 +19,8 @@ fastapi
 pydantic
 
 # Streamlit UI (streamlit/)
-streamlit
+streamlit>=1.36.0
+standard-imghdr  # imghdr removed from stdlib in Python 3.13+
 
 # Reddit scraping (data/reddit/data.ipynb)
 requests
