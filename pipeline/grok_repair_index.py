@@ -8,12 +8,12 @@ import concurrent.futures
 # Add streamlit dir to path for grok_utils
 sys.path.append(str(Path(__file__).parent.parent / "streamlit"))
 try:
-    from grok_utils import repair_resume_parse
+    from grok_utils import repair_resume_parse, enrich_whole_resume
     from rechunk import run_chunking
 except ImportError:
     # Fallback if running from a different context
     sys.path.append(os.getcwd())
-    from streamlit.grok_utils import repair_resume_parse
+    from streamlit.grok_utils import repair_resume_parse, enrich_whole_resume
     from pipeline.rechunk import run_chunking
 
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -43,6 +43,10 @@ def is_low_quality(candidate: dict) -> bool:
     skills = candidate.get("skills", [])
     if len(skills) == 1 and "," in skills[0]:
         return True
+    
+    # 4. Completely empty or extremely sparse
+    if not exp and not proj and word_count <= 250:
+        return True
         
     return False
 
@@ -66,16 +70,37 @@ def main():
     print(f"Detected {len(to_repair)} potential low-quality parses out of {len(parsed_data)}.")
     repaired_count = 0
     
+    def _process_candidate(raw: str, cand: dict):
+        rep = repair_resume_parse(raw, cand)
+        exp_count = len(rep.get("experience_entries", []))
+        proj_count = len(rep.get("project_entries", []))
+        
+        # If still critically sparse, try whole-resume enrichment
+        if exp_count == 0 and proj_count == 0:
+            return enrich_whole_resume(raw, cand), True
+        return rep, False
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future_to_candidate = {
-            executor.submit(repair_resume_parse, raw_text_map.get(c["candidate_id"], ""), c): c 
+            executor.submit(_process_candidate, raw_text_map.get(c["candidate_id"], ""), c): c 
             for c in to_repair if raw_text_map.get(c["candidate_id"])
         }
         
         for future in tqdm(concurrent.futures.as_completed(future_to_candidate), total=len(future_to_candidate), desc="Repairing with Grok"):
             original = future_to_candidate[future]
             try:
-                repaired_fields = future.result()
+                repaired_fields, is_enriched = future.result()
+                
+                # If enriched, the payload contains full schema, so we update the original object
+                if is_enriched:
+                    if "full_name" in repaired_fields:
+                        original["full_name"] = repaired_fields["full_name"]
+                    if "contact" in repaired_fields:
+                        original["contact"] = repaired_fields["contact"]
+                    if "summary" in repaired_fields:
+                        original["summary"] = repaired_fields["summary"]
+                    if "education" in repaired_fields:
+                        original["education"] = repaired_fields["education"]
                 
                 if repaired_fields and (repaired_fields.get("experience_entries") or repaired_fields.get("project_entries")):
                     # Update experience
@@ -111,10 +136,12 @@ def main():
                     # Update skills
                     if "canonical_skills" in repaired_fields:
                         original["skills"] = repaired_fields["canonical_skills"]
+                    elif "skills" in repaired_fields:
+                        original["skills"] = repaired_fields["skills"]
                     
                     # Metadata
                     original["parse_warnings"] = repaired_fields.get("parse_warnings", [])
-                    original["summary_flags"] = repaired_fields.get("summary_flags", [])
+                    original["summary_flags"] = repaired_fields.get("summary_flags", ["Grok Whole-Resume Enrich"] if is_enriched else [])
                     original["is_grok_repaired"] = True
                     repaired_count += 1
             except Exception as e:
