@@ -37,6 +37,7 @@ st.markdown(get_css(), unsafe_allow_html=True)
 
 @st.cache_resource(show_spinner="Loading search engine...")
 def load_engine() -> SearchEngine:
+    # Trigger refresh for new SearchEngine signature (v2)
     return SearchEngine()
 
 
@@ -106,16 +107,23 @@ if search_clicked:
                 st.rerun()
 
     elif input_mode == "Job Description" and has_query:
-        with st.spinner("Parsing job description and retrieving candidates..."):
-            results = engine.search(
-                query=query.strip(),
-                top_k=top_k,
-                grad_year_filter=grad_year_filter,
-                major_filter=major_filter,
-                input_mode="Job Description",
-            )
+        progress_text = "Analyzing job description..."
+        progress_bar = st.progress(0.0, text=progress_text)
+        
+        def progress_callback(msg, val):
+            progress_bar.progress(val, text=msg)
+
+        results = engine.search(
+            query=query.strip(),
+            top_k=top_k,
+            grad_year_filter=grad_year_filter,
+            major_filter=major_filter,
+            input_mode="Job Description",
+            progress_callback=progress_callback
+        )
         st.session_state["last_results"] = results
         st.session_state["last_job_description_analysis"] = engine.last_query_analysis
+        progress_bar.empty()
 
 # Job description analysis is stored but not rendered directly anymore per user request
 

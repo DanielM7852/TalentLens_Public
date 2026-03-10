@@ -270,6 +270,19 @@ div[data-testid="stVerticalBlockBorderWrapper"] .stSelectbox div[data-baseweb="s
     flex-shrink: 0;
 }
 
+.grok-badge {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+}
+
 .open-link {
     color: #2dd4bf;
     font-weight: 600;

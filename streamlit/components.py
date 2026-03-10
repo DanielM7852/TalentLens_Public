@@ -191,19 +191,23 @@ def render_results(results: list[ResumeResult]):
         score_col = _score_color(r.score)
         display_name = r.full_name if r.full_name else r.filename
         major_line = f'<div class="result-major">{r.major}</div>' if r.major else ""
+        badge_html = ""
+        # Check if the candidate was repaired offline
+        if getattr(r, "is_grok_repaired", False) or (isinstance(r.ranking_details, dict) and r.ranking_details.get("is_grok_repaired")):
+            badge_html = '<div class="grok-badge" style="background:#dcfce7; color:#166534; border:1px solid #166534;">Grok Repaired</div>'
+
         st.markdown(
-            f"""
-            <div class="result-card">
-                <div class="{_rank_class(r.rank)}">#{r.rank}</div>
-                <div style="flex-grow:1;">
-                    <div class="result-name">{display_name}</div>
-                    {major_line}
-                </div>
-                <div style="text-align:right;">
-                    <div class="result-score" style="color:{score_col};">{score_pct}</div>
-                </div>
-            </div>
-            """,
+            f'<div class="result-card">'
+            f'<div class="{_rank_class(r.rank)}">#{r.rank}</div>'
+            f'<div style="flex-grow:1;">'
+            f'<div class="result-name">{display_name}</div>'
+            f'{major_line}'
+            f'</div>'
+            f'<div style="text-align:right;">'
+            f'<div class="result-score" style="color:{score_col};">{score_pct}</div>'
+            f'{badge_html}'
+            f'</div>'
+            f'</div>',
             unsafe_allow_html=True,
         )
         with st.expander(f"Details — {display_name}", expanded=False):
@@ -289,6 +293,26 @@ def _render_detail_panel(r: ResumeResult):
     if r.matched_skills:
         skills_html = "".join(f'<span class="matched-skill">{s}</span>' for s in r.matched_skills)
         st.markdown(f'<div style="margin-top:0.6rem;"><span class="detail-label">Matched Skills:</span><br/>{skills_html}</div>', unsafe_allow_html=True)
+
+    # Grok Repair Details (Offline)
+    is_repaired = getattr(r, "is_grok_repaired", False)
+    if is_repaired:
+        st.markdown("---")
+        st.markdown("### Grok Repair Insights (Offline)")
+        st.success("This resume's structure was professionally recovered and normalized by Grok AI to ensure peak retrieval accuracy.")
+        
+        warnings = getattr(r, "parse_warnings", [])
+        flags = getattr(r, "summary_flags", [])
+        
+        if warnings:
+            st.warning("**Parsing Notes:** " + ", ".join(warnings))
+        if flags:
+            st.info("**Data Flags:** " + ", ".join(flags))
+
+    if r.explanation:
+        st.markdown("---")
+        st.markdown("### Match Explanation")
+        st.markdown(r.explanation)
 
 
 
