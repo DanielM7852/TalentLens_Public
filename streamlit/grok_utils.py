@@ -225,3 +225,42 @@ def repair_resume_parse(raw_text: str, current_parsed: dict, api_key: str | None
         return payload if payload else current_parsed
     except Exception:
         return current_parsed
+
+def enrich_whole_resume(raw_text: str, current_parsed: dict, api_key: str | None = None) -> dict:
+    """
+    Optional Offline fallback: If a resume parse is critically sparse, 
+    use Grok to extract ALL fundamental fields directly from the raw text.
+    """
+    client = _build_client(api_key)
+    if not client: return current_parsed
+    
+    prompt = (
+        "You are an expert resume parser. This resume was poorly parsed and is missing critical structured data. "
+        "Read the raw text and extract an entirely new, fully structured profile.\n\n"
+        f"RAW TEXT:\n{raw_text[:8000]}\n\n"
+        "Return ONLY valid JSON with EXACTLY this schema. Pay special attention to structuring experience and projects as arrays of objects.\n"
+        "{\n"
+        '  "full_name": string,\n'
+        '  "contact": string,\n'
+        '  "summary": string,\n'
+        '  "skills": [string],\n'
+        '  "education": string,\n'
+        '  "experience_entries": [\n'
+        '    {"title": string, "company": string, "dates": string, "location": string, "bullets": [string], "technologies": [string]}\n'
+        '  ],\n'
+        '  "project_entries": [\n'
+        '    {"name": string, "dates": string, "bullets": [string], "technologies": [string]}\n'
+        '  ]\n'
+        "}"
+    )
+    
+    try:
+        response = _create_chat_completion(client, [
+            {"role": "system", "content": "You are a precise data extraction specialist returning strict JSON."},
+            {"role": "user", "content": prompt}
+        ])
+        raw_content = response["choices"][0]["message"]["content"]
+        payload = _extract_json_payload(raw_content)
+        return payload if payload else current_parsed
+    except Exception:
+        return current_parsed

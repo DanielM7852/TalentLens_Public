@@ -309,6 +309,15 @@ def _render_detail_panel(r: ResumeResult):
         if flags:
             st.info("**Data Flags:** " + ", ".join(flags))
 
+    if getattr(r, "grok_status", "") == "Evaluated":
+        st.markdown("---")
+        st.markdown("### Grok Live Evaluation")
+        cols = st.columns(2)
+        cols[0].metric("Qualification Fit", f"{getattr(r, 'grok_fit_score', 0) * 10:.1f}/10")
+        cols[1].metric("Resume Quality", f"{getattr(r, 'grok_resume_quality_score', 0) * 10:.1f}/10")
+        if getattr(r, "grok_summary", ""):
+            st.markdown(f"**Grok Summary:** {r.grok_summary}")
+
     if r.explanation:
         st.markdown("---")
         st.markdown("### Match Explanation")

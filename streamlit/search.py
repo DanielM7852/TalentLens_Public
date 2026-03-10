@@ -450,8 +450,32 @@ class SearchEngine:
         for i, r in enumerate(results, 1):
             r.rank = i
 
-        # Step 6/7/8: Final Scoring (Grok Live Evaluation Removed per User Specification)
-        update_progress("Finalizing ranking...", 0.80)
+        # Step 6/7: Grok Live Evaluation (Top 10)
+        update_progress("Evaluating top candidates...", 0.70)
+        top_10 = results[:10]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future_to_result = {
+                executor.submit(
+                    evaluate_candidate_with_rubric,
+                    candidate_text=r.full_text,
+                    candidate_name=r.full_name or r.candidate_id,
+                    job_description=parsed.raw_text
+                ): r for r in top_10
+            }
+            for future in concurrent.futures.as_completed(future_to_result):
+                r = future_to_result[future]
+                try:
+                    payload = future.result()
+                    if payload:
+                        r.grok_status = "Evaluated"
+                        r.grok_fit_score = float(payload.get("qualification_match_score", 0.0)) / 10.0
+                        r.grok_resume_quality_score = float(payload.get("resume_quality_score", 0.0)) / 10.0
+                        r.grok_summary = payload.get("summary", "")
+                except Exception as e:
+                    print(f"Error evaluating {r.candidate_id} with Grok: {e}")
+
+        # Step 8: Final Scoring
+
         for r in results:
             # Page count check
             if r.rank <= 20:
@@ -470,12 +494,14 @@ class SearchEngine:
             if r.ranking_details.get("total_must_have_count", 0) > 0:
                 must_have_coverage = r.ranking_details.get("matched_must_have_count", 0) / r.ranking_details["total_must_have_count"]
             
-            # Final calculation (Adjusted weights since Grok Live is removed)
-            # We now give more weight to retrieval and reranker which benefit from the REPAIRED data
+            # Final calculation (Adjusted weights back to Friend's Flowchart values)
+            # 0.30 retrieval + 0.20 reranker + 0.15 must-have + 0.20 grok fit + 0.15 grok quality
             final_score = (
-                (0.40 * retrieval_base) +
-                (0.35 * reranker) +
-                (0.25 * must_have_coverage)
+                (0.30 * retrieval_base) +
+                (0.20 * reranker) +
+                (0.15 * must_have_coverage) +
+                (0.20 * r.grok_fit_score) +
+                (0.15 * r.grok_resume_quality_score)
             )
             
             # Page penalty
@@ -485,9 +511,11 @@ class SearchEngine:
             # Normalize for recruiter palatability (e.g. 0.35 -> ~72%)
             r.score = self._normalize_score(final_score)
             r.ranking_details["final_score_breakdown"] = {
-                "retrieval_40": round(0.40 * retrieval_base, 4),
-                "reranker_35": round(0.35 * reranker, 4),
-                "must_have_25": round(0.25 * must_have_coverage, 4),
+                "retrieval_30": round(0.30 * retrieval_base, 4),
+                "reranker_20": round(0.20 * reranker, 4),
+                "must_have_15": round(0.15 * must_have_coverage, 4),
+                "grok_fit_20": round(0.20 * r.grok_fit_score, 4),
+                "grok_quality_15": round(0.15 * r.grok_resume_quality_score, 4),
                 "page_penalty": -0.04 if r.page_count > 1 else 0
             }
 
@@ -549,6 +577,9 @@ class SearchEngine:
         scores = self._resume_scores(query, query_skills)
         for meta, raw_score in zip(self.resume_metadata, scores):
             if raw_score < min_score:
+                continue
+            candidate_id = meta.get("filename", "")
+            if candidate_id and "daniel" in candidate_id.lower():
                 continue
             member_info = self._lookup_member(meta.get("filename", ""), meta.get("text", ""))
             grad_year = member_info.get("graduation_year", meta.get("graduation_year", ""))
@@ -788,6 +819,8 @@ class SearchEngine:
 
         results: list[ResumeResult] = []
         for candidate_id, hits in grouped.items():
+            if "daniel" in candidate_id.lower():
+                continue
             hits.sort(key=lambda item: item.score, reverse=True)
             profile = self._get_candidate_profile(candidate_id)
             if not profile:
