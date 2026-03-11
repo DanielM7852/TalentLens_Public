@@ -9,6 +9,7 @@ viva/
 venv/
 env/
 ml/
+
 .env
 __pycache__/
 *.py[cod]
@@ -24,3 +25,25 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+
+venv/
+.venv/
+env/
+.env/
+*.pyc
+__pycache__/
+.idea/
+.vscode/
+
+plan.md
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+*.pyc
+__pycache__/
+.idea/
+.vscode/
+*.ipynb_checkpoints/
