@@ -213,6 +213,56 @@ div[data-testid="stVerticalBlockBorderWrapper"] .stSelectbox div[data-baseweb="s
 }
 
 /* ── Result card ─────────────────────────────────────────────────────── */
+<<<<<<< HEAD
+.dropdown-result {
+    margin-bottom: 1.5rem;
+}
+
+.result-card {
+    background: #ffffff;
+    border-radius: 12px 12px 0 0; /* Rounded top only */
+    padding: 1.15rem 1.4rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+/* Rank-based background colors */
+.card-rank-1 { background-color: #fef3c7 !important; } /* Gold - Amber 100 */
+.card-rank-2 { background-color: #e2e8f0 !important; } /* Silver - Slate 200 */
+.card-rank-3 { background-color: #ffedd5 !important; } /* Bronze - Orange 100 */
+.card-rank-4-plus { background-color: #f0f9ff !important; } /* Light Blue - Sky 50 */
+
+/* Styling the expander to match the card directly above it */
+div:has(.card-rank-1) + div[data-testid="stExpander"],
+div:has(.card-rank-1) + div[data-testid="stExpander"] > summary {
+    background-color: #fef3c7 !important;
+}
+
+div:has(.card-rank-2) + div[data-testid="stExpander"],
+div:has(.card-rank-2) + div[data-testid="stExpander"] > summary {
+    background-color: #e2e8f0 !important;
+}
+
+div:has(.card-rank-3) + div[data-testid="stExpander"],
+div:has(.card-rank-3) + div[data-testid="stExpander"] > summary {
+    background-color: #ffedd5 !important;
+}
+
+div:has(.card-rank-4-plus) + div[data-testid="stExpander"],
+div:has(.card-rank-4-plus) + div[data-testid="stExpander"] > summary {
+    background-color: #f0f9ff !important;
+}
+
+.result-card:hover {
+    filter: brightness(0.98);
+=======
 .result-card {
     background: #ffffff;
     border-radius: 12px;
@@ -228,6 +278,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] .stSelectbox div[data-baseweb="s
 .result-card:hover {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
     transform: translateY(-1px);
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 }
 
 .rank-badge {
@@ -250,6 +301,108 @@ div[data-testid="stVerticalBlockBorderWrapper"] .stSelectbox div[data-baseweb="s
 .rank-3 { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
 
 .result-name {
+<<<<<<< HEAD
+    font-size: 0.98rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    flex-grow: 1 !important;
+}
+
+.result-major {
+    font-size: 0.78rem !important;
+    color: #64748b !important;
+    margin-top: 0.15rem !important;
+}
+
+.result-score {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    color: #16a34a !important; /* Slightly darker green */
+    margin-right: 1.2rem !important;
+    flex-shrink: 0 !important;
+}
+
+.open-link {
+    color: #0d9488 !important; /* Darker teal for contrast */
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    text-decoration: none !important;
+    flex-shrink: 0 !important;
+    transition: color 0.2s !important;
+}
+
+.open-link:hover {
+    color: #0f766e !important;
+}
+
+/* ── Expanded detail panel (style the expander content area) ─────────── */
+/* Seamless expander header */
+div[data-testid="stExpander"] {
+    border: 1px solid #cbd5e1 !important;
+    border-top: none !important;
+    border-radius: 0 0 12px 12px !important;
+    background: transparent !important; /* Let sibling-matched color show through */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+div[data-testid="stExpander"] > summary {
+    padding: 0.1rem 1.4rem !important;
+    color: #475569 !important; /* Darker blue-gray for better contrast on Light Blue/Gold/Silver */
+    font-size: 0.75rem !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+div[data-testid="stExpander"] > summary:hover {
+    color: #64748b !important;
+}
+
+div[data-testid="stExpander"] > details > div[data-testid="stExpanderDetails"] {
+    background: #0f172a !important; /* Navy Blue */
+    border: none !important;
+    border-radius: 0 0 12px 12px;
+    padding: 1.5rem !important;
+}
+
+/* Force white text inside the navy expander but preserve metrics and labels */
+div[data-testid="stExpanderDetails"] {
+    color: #ffffff !important;
+}
+div[data-testid="stExpanderDetails"] p, 
+div[data-testid="stExpanderDetails"] li {
+    color: #f1f5f9 !important;
+}
+
+/* Except for specific items like matched skills badges which have their own styling */
+div[data-testid="stExpanderDetails"] .matched-skill {
+    background: rgba(34, 197, 94, 0.2) !important;
+    color: #4ade80 !important;
+    border: 1px solid rgba(74, 222, 128, 0.3) !important;
+}
+
+.evaluation-section {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.evaluation-section h3 {
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 1rem !important;
+}
+
+.detail-label {
+    font-weight: 600 !important;
+    color: #94a3b8 !important; /* Lighter blue-gray for labels on navy */
+    font-size: 0.82rem !important;
+}
+
+.detail-value {
+    color: #f8fafc !important; /* Off-white for values */
+    font-size: 0.82rem !important;
+=======
     font-size: 0.98rem;
     font-weight: 600;
     color: #1e293b;
@@ -300,10 +453,25 @@ div[data-testid="stExpander"] > details > div[data-testid="stExpanderDetails"] {
 .detail-value {
     color: #f1f5f9;
     font-size: 0.82rem;
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 }
 
 .matched-skill {
     display: inline-block;
+<<<<<<< HEAD
+    background: rgba(34, 197, 94, 0.08);
+    color: #166534;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin: 0.2rem 0.3rem 0.2rem 0;
+    border: 1px solid rgba(22, 101, 52, 0.15);
+}
+
+.text-preview {
+    color: #475569;
+=======
     background: rgba(34, 197, 94, 0.15);
     color: #4ade80;
     padding: 0.2rem 0.6rem;
@@ -316,14 +484,22 @@ div[data-testid="stExpander"] > details > div[data-testid="stExpanderDetails"] {
 
 .text-preview {
     color: #cbd5e1;
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     font-size: 0.82rem;
     line-height: 1.6;
     max-height: 120px;
     overflow-y: auto;
+<<<<<<< HEAD
+    padding: 0.8rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+=======
     padding: 0.6rem;
     background: rgba(15, 23, 42, 0.6);
     border-radius: 6px;
     border: 1px solid #334155;
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     margin-top: 0.5rem;
 }
 
