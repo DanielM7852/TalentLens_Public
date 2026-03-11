@@ -6,7 +6,10 @@ Each function renders a self-contained piece of the interface.
 from __future__ import annotations
 
 import base64
+<<<<<<< HEAD
 import html
+=======
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 from pathlib import Path
 
 import streamlit as st
@@ -18,10 +21,20 @@ _LOGO_PATH = Path(__file__).parent / "ds3_logo.png"
 
 
 def _logo_b64() -> str:
+<<<<<<< HEAD
+=======
+    """Return the DS3 logo as a base64 data-URI for use in raw HTML."""
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     data = _LOGO_PATH.read_bytes()
     return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 
+<<<<<<< HEAD
+=======
+# ---------------------------------------------------------------------------
+# Header (fixed bar at top of page)
+# ---------------------------------------------------------------------------
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 def render_header():
     logo_src = _logo_b64() if _LOGO_PATH.exists() else ""
     logo_html = (
@@ -46,29 +59,62 @@ def render_header():
     )
 
 
+<<<<<<< HEAD
 def render_demo_banner(message: str):
     st.markdown(
         f"""
         <div class="demo-banner">
             <strong>Search Mode Notice</strong> &mdash; {message}
+=======
+# ---------------------------------------------------------------------------
+# Demo-mode banner
+# ---------------------------------------------------------------------------
+def render_demo_banner():
+    st.markdown(
+        """
+        <div class="demo-banner">
+            <strong>Demo Mode</strong> &mdash; Pipeline artifacts not found.
+            Showing synthetic results. Run <code>resume_matching_pipeline.ipynb</code>
+            to generate the FAISS index and metadata for real search.
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
+<<<<<<< HEAD
 def render_skills_panel() -> list[str]:
+=======
+# ---------------------------------------------------------------------------
+# Inline skills panel (collapsible, below header)
+# ---------------------------------------------------------------------------
+def render_skills_panel() -> list[str]:
+    """
+    Render a toggle button + collapsible skill-chip panel in the main
+    content area (directly below the fixed header).  Returns the list
+    of currently selected skills.
+    """
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     if "selected_skills" not in st.session_state:
         st.session_state["selected_skills"] = []
     if "skills_panel_open" not in st.session_state:
         st.session_state["skills_panel_open"] = False
 
+<<<<<<< HEAD
+=======
+    # Toggle button
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     label = "Hide Skill Filters" if st.session_state["skills_panel_open"] else "Show Skill Filters"
     arrow = "\u25B2" if st.session_state["skills_panel_open"] else "\u25BC"
     if st.button(f"{arrow}  {label}", key="skills_panel_toggle"):
         st.session_state["skills_panel_open"] = not st.session_state["skills_panel_open"]
         st.rerun()
 
+<<<<<<< HEAD
+=======
+    # Panel contents
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     if st.session_state["skills_panel_open"]:
         st.markdown(
             '<div class="skills-panel">'
@@ -80,17 +126,32 @@ def render_skills_panel() -> list[str]:
 
         cols_per_row = 5
         skills_to_show = SKILL_SUGGESTIONS[:15]
+<<<<<<< HEAD
         rows = [skills_to_show[i : i + cols_per_row] for i in range(0, len(skills_to_show), cols_per_row)]
+=======
+        rows = [
+            skills_to_show[i : i + cols_per_row]
+            for i in range(0, len(skills_to_show), cols_per_row)
+        ]
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
         for row in rows:
             cols = st.columns(cols_per_row)
             for col, skill in zip(cols, row):
                 is_active = skill in st.session_state["selected_skills"]
+<<<<<<< HEAD
+=======
+                btn_type = "primary" if is_active else "secondary"
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
                 with col:
                     if st.button(
                         skill,
                         key=f"skill_{skill}",
                         use_container_width=True,
+<<<<<<< HEAD
                         type="primary" if is_active else "secondary",
+=======
+                        type=btn_type,
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
                     ):
                         if is_active:
                             st.session_state["selected_skills"].remove(skill)
@@ -101,6 +162,7 @@ def render_skills_panel() -> list[str]:
     return st.session_state["selected_skills"]
 
 
+<<<<<<< HEAD
 def render_sidebar_filters(grad_years: list[str], majors: list[str]):
     st.sidebar.markdown("### Filters")
     grad_year = st.sidebar.selectbox("Graduation Year", options=["All"] + grad_years, index=0, key="grad_year_filter")
@@ -111,6 +173,50 @@ def render_sidebar_filters(grad_years: list[str], majors: list[str]):
 
 def render_sidebar_stats(resume_count: int, mode_text: str):
     st.sidebar.markdown("---")
+=======
+# ---------------------------------------------------------------------------
+# Sidebar — filters (graduation year, major, top-k)
+# ---------------------------------------------------------------------------
+def render_sidebar_filters(grad_years: list[str], majors: list[str]):
+    st.sidebar.markdown("### Filters")
+
+    grad_year = st.sidebar.selectbox(
+        "Graduation Year",
+        options=["All"] + grad_years,
+        index=0,
+        key="grad_year_filter",
+    )
+
+    major = st.sidebar.selectbox(
+        "Major",
+        options=["All"] + majors,
+        index=0,
+        key="major_filter",
+    )
+
+    top_k = st.sidebar.slider(
+        "Results to show",
+        min_value=5,
+        max_value=50,
+        value=10,
+        step=5,
+        key="top_k",
+    )
+
+    return (
+        None if grad_year == "All" else grad_year,
+        None if major == "All" else major,
+        top_k,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Sidebar — stats
+# ---------------------------------------------------------------------------
+def render_sidebar_stats(resume_count: int, demo: bool):
+    st.sidebar.markdown("---")
+    mode_text = "Demo" if demo else "Live"
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     st.sidebar.markdown(
         f"""
         <div class="stat-card">
@@ -126,22 +232,57 @@ def render_sidebar_stats(resume_count: int, mode_text: str):
     )
 
 
+<<<<<<< HEAD
 def render_search_bar(selected_skills: list[str]) -> tuple[str, bool, bool, str, str]:
     if selected_skills:
         tags_html = "".join(f'<span class="active-skill-tag">{s}</span>' for s in selected_skills)
         st.markdown(tags_html, unsafe_allow_html=True)
 
+=======
+# ---------------------------------------------------------------------------
+# Search bar + action buttons
+# ---------------------------------------------------------------------------
+def render_search_bar(selected_skills: list[str]) -> tuple[str, bool, bool]:
+    """
+    Returns (query_text, search_submitted, clear_clicked).
+
+    The dropdown toggles between two input modes:
+      * **Skills** — the text field accepts comma-separated skills and
+        sidebar skill chips are active.
+      * **Job Description** — the text field accepts free-form text
+        (a full job posting, paragraph, etc.).
+
+    The mode selector lives *outside* the form so switching modes
+    triggers an instant rerun (updates the placeholder immediately).
+    """
+    if selected_skills:
+        tags_html = "".join(
+            f'<span class="active-skill-tag">{s}</span>' for s in selected_skills
+        )
+        st.markdown(tags_html, unsafe_allow_html=True)
+
+    # --- mode selector (outside form → instant rerun on change) ----------
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
     _, col_mode_right = st.columns([6, 2.5])
     with col_mode_right:
         input_mode = st.selectbox(
             "Input mode",
             options=["Skills", "Job Description"],
+<<<<<<< HEAD
             index=0 if st.session_state.get("input_mode", "Skills") == "Skills" else 1,
+=======
+            index=(
+                0
+                if st.session_state.get("input_mode", "Skills") == "Skills"
+                else 1
+            ),
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
             label_visibility="collapsed",
             key="input_mode_widget",
         )
     st.session_state["input_mode"] = input_mode
 
+<<<<<<< HEAD
     placeholder = "e.g. Python, Machine Learning, SQL..." if input_mode == "Skills" else "Paste a job description or requirements..."
 
     with st.form("search_form", clear_on_submit=False, border=True):
@@ -174,6 +315,47 @@ def render_search_bar(selected_skills: list[str]) -> tuple[str, bool, bool, str,
 
 
 
+=======
+    placeholder = (
+        "e.g. Python, Machine Learning, SQL..."
+        if input_mode == "Skills"
+        else "Paste a job description or requirements..."
+    )
+
+    # --- search form (Enter key + button both submit) --------------------
+    with st.form("search_form", clear_on_submit=False, border=True):
+        col_input, col_enter, col_clear = st.columns(
+            [5, 1.5, 1.5], vertical_alignment="bottom"
+        )
+
+        with col_input:
+            query = st.text_input(
+                "Search",
+                placeholder=placeholder,
+                label_visibility="collapsed",
+                key="search_query",
+            )
+
+        with col_enter:
+            search_submitted = st.form_submit_button(
+                "Enter",
+                type="primary",
+                use_container_width=True,
+            )
+
+        with col_clear:
+            clear_clicked = st.form_submit_button(
+                "Clear",
+                use_container_width=True,
+            )
+
+    return query, search_submitted, clear_clicked
+
+
+# ---------------------------------------------------------------------------
+# Result cards
+# ---------------------------------------------------------------------------
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 def _score_color(score: float) -> str:
     if score >= 0.7:
         return COLORS["score_green"]
@@ -183,6 +365,7 @@ def _score_color(score: float) -> str:
 
 
 def _rank_class(rank: int) -> str:
+<<<<<<< HEAD
     return f"rank-badge rank-{rank}" if rank <= 3 else "rank-badge"
 
 
@@ -208,6 +391,11 @@ def _result_card_html(rank: int, name: str, major: str, score_pct: str, score_co
         f"</div>"
         f"</div>"
     )
+=======
+    if rank <= 3:
+        return f"rank-badge rank-{rank}"
+    return "rank-badge"
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 
 
 def render_results(results: list[ResumeResult]):
@@ -227,6 +415,7 @@ def render_results(results: list[ResumeResult]):
         return
 
     st.markdown('<p class="section-heading">Ranked Candidates</p>', unsafe_allow_html=True)
+<<<<<<< HEAD
     for r in results:
         score_pct = f"{r.score * 100:.0f}%"
         score_col = _score_color(r.score)
@@ -256,12 +445,38 @@ def _render_grok_details(r: ResumeResult):
     elif getattr(r, "grok_summary", ""):
         st.markdown(f"**Match Explanation:** {r.grok_summary}")
     st.markdown('</div>', unsafe_allow_html=True)
+=======
+
+    for r in results:
+        score_pct = f"{r.score * 100:.0f}%"
+        score_col = _score_color(r.score)
+        rank_cls = _rank_class(r.rank)
+
+        display_name = r.full_name if r.full_name else r.filename
+        major_line = f'<div class="result-major">{r.major}</div>' if r.major else ""
+
+        card_html = f"""
+        <div class="result-card">
+            <div class="{rank_cls}">#{r.rank}</div>
+            <div style="flex-grow:1;">
+                <div class="result-name">{display_name}</div>
+                {major_line}
+            </div>
+            <div class="result-score" style="color:{score_col};">{score_pct}</div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
+
+        with st.expander(f"Details — {display_name}", expanded=False):
+            _render_detail_panel(r)
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 
 
 def _render_detail_panel(r: ResumeResult):
     col1, col2 = st.columns(2)
     with col1:
         if r.full_name:
+<<<<<<< HEAD
             st.markdown(f"<span class='detail-label'>Name:</span> <span class='detail-value'>{_escape_text(r.full_name)}</span>", unsafe_allow_html=True)
         if r.major:
             st.markdown(f"<span class='detail-label'>Major:</span> <span class='detail-value'>{_escape_text(r.major)}</span>", unsafe_allow_html=True)
@@ -293,6 +508,36 @@ def _render_detail_panel(r: ResumeResult):
 
 
 
+=======
+            st.markdown(f'<span class="detail-label">Name:</span> <span class="detail-value">{r.full_name}</span>', unsafe_allow_html=True)
+        if r.major:
+            st.markdown(f'<span class="detail-label">Major:</span> <span class="detail-value">{r.major}</span>', unsafe_allow_html=True)
+        if r.graduation_year:
+            st.markdown(f'<span class="detail-label">Graduation:</span> <span class="detail-value">{r.graduation_year}</span>', unsafe_allow_html=True)
+
+    with col2:
+        if r.resume_link:
+            st.markdown(f'<span class="detail-label">Resume:</span> <a href="{r.resume_link}" target="_blank" class="open-link">Open PDF &rarr;</a>', unsafe_allow_html=True)
+        if r.linkedin:
+            st.markdown(f'<span class="detail-label">LinkedIn:</span> <a href="{r.linkedin}" target="_blank" class="open-link">Profile &rarr;</a>', unsafe_allow_html=True)
+        if r.github:
+            st.markdown(f'<span class="detail-label">GitHub:</span> <a href="{r.github}" target="_blank" class="open-link">Profile &rarr;</a>', unsafe_allow_html=True)
+
+    if r.matched_skills:
+        skills_html = "".join(f'<span class="matched-skill">{s}</span>' for s in r.matched_skills)
+        st.markdown(
+            f'<div style="margin-top:0.6rem;"><span class="detail-label">Matched Skills:</span><br/>{skills_html}</div>',
+            unsafe_allow_html=True,
+        )
+
+    if r.text_preview:
+        st.markdown(f'<div class="text-preview">{r.text_preview}</div>', unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Empty / initial state
+# ---------------------------------------------------------------------------
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 def render_initial_state():
     st.markdown(
         """

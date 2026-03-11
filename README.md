@@ -73,6 +73,7 @@ data/discord/
 ├── upload_to_dropbox.py        # Uploads files to shared Dropbox folder
 └── data.ipynb                  # Data exploration notebook
 ```
+<<<<<<< HEAD
 
 ---
 
@@ -87,3 +88,5 @@ The text extraction pipeline (`pipeline/01_text_extraction.ipynb`) can OCR image
 - **Windows:** [Tesseract at GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
 
 Ensure `tesseract` is on your PATH so the `pytesseract` Python package can find it.
+=======
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e

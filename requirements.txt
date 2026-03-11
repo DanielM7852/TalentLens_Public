@@ -8,7 +8,10 @@ numpy
 Pillow
 pytesseract
 python-docx
+<<<<<<< HEAD
 pymupdf
+=======
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 
 # Embeddings & similarity (resume_matching_pipeline)
 sentence-transformers
@@ -18,7 +21,10 @@ faiss-cpu
 # API (resume_matching_pipeline)
 fastapi
 pydantic
+<<<<<<< HEAD
 pydantic-settings  # required for chromadb on Python 3.14+
+=======
+>>>>>>> 1edcaa184a6ddde2abb13093e91a7546e718e88e
 
 # Streamlit UI (streamlit/)
 streamlit
