@@ -16,46 +16,25 @@ import pandas as pd
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
-try:
-    from config import (
-        DATA_DIR,
-        DEFAULT_TOP_K,
-        EMBEDDING_DIM,
-        FAISS_INDEX_PATH,
-        BOARD_RESUMES_DIR,
-        MEMBER_RESUMES_DIR,
-        MEMBERS_CSV,
-        CHUNK_METADATA_PATH,
-        METADATA_PATH,
-        MIN_SCORE_THRESHOLD,
-        MODEL_NAME,
-        PROJECT_ROOT,
-        SKILL_SUGGESTIONS,
-        RERANKER_ENABLED,
-        RERANKER_MODEL_PATH,
-    )
-    from job_description import ParsedJobDescription, apply_recruiter_overrides, parse_job_description
-    from grok_utils import assess_candidate_packet_with_grok, has_grok_api_key
-except ImportError:
-    from streamlit.config import (
-        DATA_DIR,
-        DEFAULT_TOP_K,
-        EMBEDDING_DIM,
-        FAISS_INDEX_PATH,
-        BOARD_RESUMES_DIR,
-        MEMBER_RESUMES_DIR,
-        MEMBERS_CSV,
-        CHUNK_METADATA_PATH,
-        METADATA_PATH,
-        MIN_SCORE_THRESHOLD,
-        MODEL_NAME,
-        PROJECT_ROOT,
-        SKILL_SUGGESTIONS,
-        RERANKER_ENABLED,
-        RERANKER_MODEL_PATH,
-    )
-    from streamlit.job_description import ParsedJobDescription, apply_recruiter_overrides, parse_job_description
-    from streamlit.grok_utils import assess_candidate_packet_with_grok, has_grok_api_key
+from config import (
+    DATA_DIR,
+    DEFAULT_TOP_K,
+    EMBEDDING_DIM,
+    FAISS_INDEX_PATH,
+    BOARD_RESUMES_DIR,
+    MEMBER_RESUMES_DIR,
+    MEMBERS_CSV,
+    CHUNK_METADATA_PATH,
+    METADATA_PATH,
+    MIN_SCORE_THRESHOLD,
+    MODEL_NAME,
+    PROJECT_ROOT,
+    SKILL_SUGGESTIONS,
+    RERANKER_ENABLED,
+    RERANKER_MODEL_PATH,
+)
+from job_description import ParsedJobDescription, apply_recruiter_overrides, parse_job_description
+from grok_utils import assess_candidate_packet_with_grok, has_grok_api_key
 
 
 PROCESSED_DIR = DATA_DIR / "processed"

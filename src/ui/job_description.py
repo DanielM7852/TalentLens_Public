@@ -4,10 +4,7 @@ from dataclasses import asdict, dataclass, field
 from copy import deepcopy
 import re
 
-try:
-    from config import SKILL_SUGGESTIONS
-except ImportError:
-    from streamlit.config import SKILL_SUGGESTIONS
+from config import SKILL_SUGGESTIONS
 
 
 SKILL_ALIASES: dict[str, tuple[str, ...]] = {
