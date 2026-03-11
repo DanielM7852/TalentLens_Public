@@ -25,7 +25,7 @@ CONFIG_JSON_PATH = DATA_DIR / "configs" / "config.json"
 # ---------------------------------------------------------------------------
 # Embedding model
 # ---------------------------------------------------------------------------
-MODEL_NAME = "all-MiniLM-L6-v2"
+MODEL_NAME = str(PROJECT_ROOT / "models" / "all-MiniLM-L6-v2")
 EMBEDDING_DIM = 384
 
 # ---------------------------------------------------------------------------
