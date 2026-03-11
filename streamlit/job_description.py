@@ -4,10 +4,14 @@ from dataclasses import asdict, dataclass, field
 from copy import deepcopy
 import re
 
-try:
-    from config import SKILL_SUGGESTIONS
-except ImportError:
-    from streamlit.config import SKILL_SUGGESTIONS
+import sys
+from pathlib import Path
+
+_THIS_DIR = str(Path(__file__).resolve().parent)
+if _THIS_DIR not in sys.path:
+    sys.path.insert(0, _THIS_DIR)
+
+from config import SKILL_SUGGESTIONS
 
 
 SKILL_ALIASES: dict[str, tuple[str, ...]] = {
