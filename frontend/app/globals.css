@@ -4,48 +4,63 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    color-scheme: light;
+    --background: 0 0% 99%;
+    --foreground: 224 71% 4%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 63%;
-    --radius: 0.625rem;
+    --popover-foreground: 224 71% 4%;
+    /* Deep violet accent — 4.5:1+ on white for UI chrome */
+    --primary: 250 65% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 47% 11%;
+    --muted: 220 14% 96%;
+    /* ~4.6:1 on white (WCAG AA body text) */
+    --muted-foreground: 220 9% 38%;
+    --accent: 250 100% 97%;
+    --accent-foreground: 250 65% 38%;
+    --destructive: 0 72% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 88%;
+    --input: 220 13% 88%;
+    --ring: 250 65% 48%;
+    --radius: 0.5rem;
+    --score-high: 152 69% 32%;
+    --score-mid: 221 83% 42%;
+    --score-low: 220 9% 42%;
+    --hero-grid: 220 13% 88%;
+    --mark: 250 65% 48%;
   }
 
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 0 0% 45%;
+    color-scheme: dark;
+    --background: 224 47% 6%;
+    --foreground: 210 20% 98%;
+    --card: 224 40% 10%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 40% 10%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 250 80% 68%;
+    --primary-foreground: 224 47% 6%;
+    --secondary: 215 28% 14%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 14%;
+    /* ~5.5:1 on card background */
+    --muted-foreground: 217 11% 72%;
+    --accent: 250 35% 16%;
+    --accent-foreground: 250 90% 88%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 22% 20%;
+    --input: 215 22% 20%;
+    --ring: 250 80% 68%;
+    --score-high: 152 55% 52%;
+    --score-mid: 221 75% 62%;
+    --score-low: 217 11% 62%;
+    --hero-grid: 215 22% 18%;
+    --mark: 250 80% 68%;
   }
 
   * {
@@ -53,12 +68,114 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans text-base leading-relaxed antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight text-foreground;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-2xl sm:text-3xl;
+  }
+
+  h2 {
+    @apply text-lg sm:text-xl;
+  }
+
+  code,
+  kbd {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.9em;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring;
+  }
+
+  .hero-surface {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(
+        ellipse 75% 55% at 50% -15%,
+        hsl(var(--primary) / 0.1),
+        transparent 65%
+      ),
+      linear-gradient(
+        to bottom,
+        hsl(var(--muted) / 0.4),
+        transparent 55%
+      ),
+      linear-gradient(hsl(var(--hero-grid) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--hero-grid) / 0.5) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      100% 100%,
+      28px 28px,
+      28px 28px;
+  }
+
+  .dark .hero-surface {
+    background-image:
+      radial-gradient(
+        ellipse 75% 55% at 50% -15%,
+        hsl(var(--primary) / 0.14),
+        transparent 65%
+      ),
+      linear-gradient(
+        to bottom,
+        hsl(var(--muted) / 0.25),
+        transparent 55%
+      ),
+      linear-gradient(hsl(var(--hero-grid) / 0.6) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--hero-grid) / 0.6) 1px, transparent 1px);
+  }
+
+  .interactive {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .skip-link {
+    @apply sr-only;
+  }
+
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    margin: 0;
+    height: auto;
+    width: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    border-radius: calc(var(--radius) - 2px);
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-size: 0.875rem;
+    font-weight: 500;
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }

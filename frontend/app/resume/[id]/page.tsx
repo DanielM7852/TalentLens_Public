@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ResumeDetailView } from "@/components/resume-detail-view";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, API_BASE_URL, fetchResume } from "@/lib/api";
-import type { ResumeDetail } from "@/lib/types";
-import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { ResumeDetailView } from "@/components/resume-detail-view";
+import { StateAction, StatePanel } from "@/components/state-panel";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ApiError, fetchResume } from "@/lib/api";
+import type { ResumeDetail } from "@/lib/types";
+import { FileQuestion } from "lucide-react";
 
 export default function ResumeDetailPage() {
   const params = useParams();
@@ -40,13 +41,13 @@ export default function ResumeDetailPage() {
       if (err instanceof ApiError) {
         setError(
           err.status === 404
-            ? `Resume not found: ${resumeId}`
+            ? `No resume found for id “${resumeId}”. It may have been removed from the index.`
             : err.message
         );
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Could not load resume. Is the API running?");
+        setError("Could not load this profile. Check that the API is running.");
       }
     } finally {
       setLoading(false);
@@ -59,59 +60,61 @@ export default function ResumeDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-xl font-semibold tracking-tight hover:underline sm:text-2xl"
-            >
-              TalentLens
-            </Link>
-            <Badge
-              variant="secondary"
-              className="text-[10px] font-medium uppercase tracking-wide"
-            >
-              by DS3
-            </Badge>
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
+        <div className="relative mx-auto flex max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/"
+            className="focus-ring rounded-sm text-sm font-semibold tracking-tight text-foreground transition-colors duration-200 hover:text-primary"
+          >
+            TalentLens
+          </Link>
+          <Badge
+            variant="secondary"
+            className="border border-primary/20 bg-primary/10 text-[9px] font-medium uppercase tracking-wider text-primary"
+          >
+            DS3
+          </Badge>
+          <span className="ml-auto hidden max-w-[12rem] truncate font-mono text-xs text-muted-foreground sm:inline">
+            {resumeId}
+          </span>
+          <div className="sm:ml-2">
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+      <main id="main-content" className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         {loading && (
-          <div className="space-y-4" aria-busy="true">
+          <div className="animate-fade-in space-y-4" aria-busy="true" aria-live="polite">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-64" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         )}
 
         {!loading && error && (
-          <div
-            className="flex flex-col items-center rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-14 text-center"
-            role="alert"
+          <StatePanel
+            icon={FileQuestion}
+            title="Profile unavailable"
+            description={error}
+            iconClassName="bg-muted text-muted-foreground"
           >
-            <AlertCircle className="mb-3 size-10 text-destructive" aria-hidden />
-            <h1 className="text-lg font-medium">Could not load resume</h1>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">{error}</p>
-            <p className="mt-2 text-xs text-muted-foreground">API: {API_BASE_URL}</p>
-            <div className="mt-4 flex gap-2">
-              <Button type="button" variant="outline" onClick={() => void loadResume()}>
-                Retry
-              </Button>
-              <Link
-                href="/"
-                className="inline-flex h-8 items-center justify-center rounded-lg bg-secondary px-3 text-sm font-medium text-secondary-foreground hover:bg-secondary/80"
-              >
-                Back to search
-              </Link>
-            </div>
-          </div>
+            <StateAction label="Retry" onClick={() => void loadResume()} />
+            <Link
+              href="/"
+              className="focus-ring interactive inline-flex h-9 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              Back to search
+            </Link>
+          </StatePanel>
         )}
 
-        {!loading && !error && resume && <ResumeDetailView resume={resume} />}
+        {!loading && !error && resume && (
+          <article className="animate-fade-in">
+            <ResumeDetailView resume={resume} />
+          </article>
+        )}
       </main>
     </div>
   );

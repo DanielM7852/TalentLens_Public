@@ -1,8 +1,11 @@
+export type RoleTypeFilter = "all" | "intern" | "new_grad" | "experienced";
+
 export interface SearchFilters {
   skills: string[];
   gradYearMin: number | null;
   gradYearMax: number | null;
   major: string;
+  roleType: RoleTypeFilter;
 }
 
 export interface ResumeSearchResult {

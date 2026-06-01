@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback } from "react";
+import { useToast } from "@/components/toast-provider";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { publicResumeUrl } from "@/lib/public-url";
 import type { ResumeDetail } from "@/lib/types";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Link2 } from "lucide-react";
 
 function formatEntry(entry: unknown): string {
   if (typeof entry === "string") return entry;
@@ -34,21 +38,42 @@ interface ResumeDetailViewProps {
 }
 
 export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
+  const { showToast } = useToast();
   const skills =
     resume.canonical_skills?.length > 0
       ? resume.canonical_skills
       : resume.skills ?? [];
+
+  const copyShareLink = useCallback(async () => {
+    const url = publicResumeUrl(resume.resume_id);
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Link copied to clipboard");
+    } catch {
+      showToast("Could not copy link");
+    }
+  }, [resume.resume_id, showToast]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/"
-          className="inline-flex h-7 items-center gap-2 rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+          className="focus-ring interactive inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted hover:text-primary"
         >
           <ArrowLeft className="size-4" />
           Back to search
         </Link>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="focus-ring interactive gap-2"
+          onClick={() => void copyShareLink()}
+        >
+          <Link2 className="size-4" aria-hidden />
+          Copy link
+        </Button>
       </div>
 
       <div>
@@ -73,7 +98,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
             href={resume.resume_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+            className="focus-ring interactive inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted hover:text-primary"
           >
             Resume PDF
             <ExternalLink className="ml-1 size-3.5" />
@@ -84,7 +109,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
             href={resume.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+            className="focus-ring interactive inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted hover:text-primary"
           >
             LinkedIn
             <ExternalLink className="ml-1 size-3.5" />
@@ -95,7 +120,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
             href={resume.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-7 items-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted"
+            className="focus-ring interactive inline-flex h-9 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-muted hover:text-primary"
           >
             GitHub
             <ExternalLink className="ml-1 size-3.5" />
@@ -114,7 +139,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
       )}
 
       {resume.summary && (
-        <Card>
+        <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Summary</CardTitle>
           </CardHeader>
@@ -127,7 +152,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
       )}
 
       {resume.experience?.length > 0 && (
-        <Card>
+        <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Experience</CardTitle>
           </CardHeader>
@@ -142,7 +167,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
       )}
 
       {resume.projects?.length > 0 && (
-        <Card>
+        <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Projects</CardTitle>
           </CardHeader>
@@ -157,7 +182,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
       )}
 
       {resume.education?.length > 0 && (
-        <Card>
+        <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Education</CardTitle>
           </CardHeader>
@@ -181,7 +206,7 @@ export function ResumeDetailView({ resume }: ResumeDetailViewProps) {
       )}
 
       {resume.combined_text && (
-        <Card>
+        <Card className="border-border/80 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Full text</CardTitle>
           </CardHeader>

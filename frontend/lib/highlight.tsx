@@ -24,12 +24,14 @@ export function highlightSnippet(text: string, query: string): ReactNode {
   const parts = text.split(pattern);
 
   return parts.map((part, index) => {
-    const isMatch = tokens.some((token) => part.toLowerCase() === token.toLowerCase());
+    const isMatch = tokens.some(
+      (token) => part.toLowerCase() === token.toLowerCase()
+    );
     if (isMatch) {
       return (
         <mark
           key={`${part}-${index}`}
-          className="rounded-sm bg-amber-200/90 px-0.5 text-foreground dark:bg-amber-500/35"
+          className="rounded-sm bg-primary/20 px-0.5 font-medium text-foreground dark:bg-primary/30"
         >
           {part}
         </mark>

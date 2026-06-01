@@ -1,4 +1,4 @@
-import { applyClientFilters, filtersToApiBody } from "@/lib/filters";
+import { filtersToApiBody } from "@/lib/filters";
 import type { ResumeDetail, ResumeSearchResult, SearchFilters, SearchResponse } from "@/lib/types";
 
 export const API_BASE_URL =
@@ -47,8 +47,7 @@ export async function searchResumes(
     throw new ApiError(res.status, await parseErrorMessage(res));
   }
 
-  const data = (await res.json()) as ResumeSearchResult[];
-  const results = applyClientFilters(data, filters);
+  const results = (await res.json()) as ResumeSearchResult[];
 
   return {
     results,

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilterPanel } from "@/components/filter-panel";
 import { ResultsSection } from "@/components/results-section";
+import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -15,9 +15,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ApiError, API_BASE_URL, resumeDetailPath, searchResumes } from "@/lib/api";
+import { ApiError, resumeDetailPath, searchResumes } from "@/lib/api";
+import { pushSearchHistory } from "@/lib/search-history";
 import type { ResumeSearchResult, SearchFilters } from "@/lib/types";
-import { SlidersHorizontal } from "lucide-react";
+import { Filter } from "lucide-react";
 
 const DEBOUNCE_MS = 300;
 
@@ -26,6 +27,7 @@ const DEFAULT_FILTERS: SearchFilters = {
   gradYearMin: null,
   gradYearMax: null,
   major: "",
+  roleType: "all",
 };
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -83,6 +85,7 @@ export default function HomePage() {
       setResults(nextResults);
       setElapsedMs(ms);
       setSelectedIndex(nextResults.length > 0 ? 0 : -1);
+      pushSearchHistory(trimmed);
     } catch (err) {
       setResults([]);
       setElapsedMs(null);
@@ -92,7 +95,9 @@ export default function HomePage() {
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An unexpected error occurred. Check that the API is running.");
+        setError(
+          "Could not reach the search API. Confirm the backend is running and CORS allows this origin."
+        );
       }
     } finally {
       setLoading(false);
@@ -138,75 +143,69 @@ export default function HomePage() {
     filters.skills.length > 0 ||
     filters.gradYearMin !== null ||
     filters.gradYearMax !== null ||
-    filters.major.trim().length > 0;
+    filters.major.trim().length > 0 ||
+    filters.roleType !== "all";
+
+  const focusSearch = () => {
+    searchInputRef.current?.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              TalentLens
-            </h1>
-            <Badge
-              variant="secondary"
-              className="text-[10px] font-medium uppercase tracking-wide"
-            >
-              by DS3
-            </Badge>
-          </div>
-          <p className="hidden truncate text-xs text-muted-foreground sm:block">
-            API: {API_BASE_URL}
-          </p>
-        </div>
-      </header>
+      <SiteHeader
+        ref={searchInputRef}
+        query={query}
+        onQueryChange={setQuery}
+        onQueryPick={setQuery}
+      />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 flex flex-col gap-3 sm:mb-8">
-          <label htmlFor="search" className="sr-only">
-            Search resumes
-          </label>
-          <Input
-            ref={searchInputRef}
-            id="search"
-            type="search"
-            placeholder="Job description or skills (e.g. Python, machine learning)…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-12 text-base shadow-sm"
-            autoComplete="off"
-          />
-          <p className="text-center text-xs text-muted-foreground sm:text-left">
-            Live search · debounced {DEBOUNCE_MS}ms ·{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
-              POST /api/search
-            </code>
-          </p>
-        </div>
-
+      <main id="main-content" className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
         <div className="flex gap-6 lg:gap-8">
-          <aside className="hidden w-64 shrink-0 lg:block xl:w-72">
-            <div className="sticky top-6 rounded-xl border bg-card p-4 shadow-sm">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Filters
-              </h2>
+          <nav
+            aria-label="Search filters"
+            className="hidden w-64 shrink-0 lg:block xl:w-72"
+          >
+            <div className="sticky top-[4.5rem] rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <Filter className="size-4 text-primary" aria-hidden />
+                <h2 className="text-sm font-semibold tracking-tight">Filters</h2>
+              </div>
               <FilterPanel filters={filters} onChange={setFilters} />
             </div>
-          </aside>
+          </nav>
 
-          <div className="min-w-0 flex-1 space-y-4">
+          <section
+            aria-label="Search results"
+            className="min-w-0 flex-1 space-y-4"
+          >
             <div className="flex items-center justify-between lg:hidden">
               <Sheet>
                 <SheetTrigger
                   render={
-                    <Button variant="outline" size="sm" className="gap-2" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="focus-ring interactive gap-2"
+                      aria-label={
+                        hasActiveFilters
+                          ? "Open filters, filters active"
+                          : "Open filters"
+                      }
+                    />
                   }
                 >
-                  <SlidersHorizontal className="size-4" />
-                  Filters
+                  <Filter className="size-4" aria-hidden />
+                  <span>Filters</span>
                   {hasActiveFilters && (
-                    <Badge variant="default" className="ml-1 h-5 min-w-5 px-1">
-                      !
+                    <Badge
+                      variant="default"
+                      className="ml-1 h-5 min-w-5 bg-primary px-1"
+                      aria-hidden
+                    >
+                      {filters.skills.length || "·"}
                     </Badge>
                   )}
                 </SheetTrigger>
@@ -217,18 +216,14 @@ export default function HomePage() {
                   <SheetHeader>
                     <SheetTitle>Filters</SheetTitle>
                     <SheetDescription>
-                      Skills, graduation year, and major are applied via the API
-                      or client-side range.
+                      Narrow results by skills, graduation year, and major.
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="px-4 pb-6">
+                  <nav aria-label="Search filters" className="px-4 pb-6">
                     <FilterPanel filters={filters} onChange={setFilters} />
-                  </div>
+                  </nav>
                 </SheetContent>
               </Sheet>
-              <p className="truncate text-xs text-muted-foreground">
-                {API_BASE_URL}
-              </p>
             </div>
 
             <ResultsSection
@@ -241,8 +236,10 @@ export default function HomePage() {
               selectedIndex={selectedIndex}
               onSelectIndex={setSelectedIndex}
               onRetry={() => void executeSearch()}
+              onClearFilters={clearFilters}
+              onFocusSearch={focusSearch}
             />
-          </div>
+          </section>
         </div>
       </main>
     </div>

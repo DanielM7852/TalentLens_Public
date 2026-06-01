@@ -29,3 +29,10 @@ export const SKILL_FILTER_OPTIONS = [
   "LLMs",
   "RAG",
 ] as const;
+
+export const ROLE_TYPE_OPTIONS = [
+  { value: "all" as const, label: "Any role" },
+  { value: "intern" as const, label: "Intern" },
+  { value: "new_grad" as const, label: "New grad" },
+  { value: "experienced" as const, label: "Experienced" },
+];

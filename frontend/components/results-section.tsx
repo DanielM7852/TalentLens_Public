@@ -1,10 +1,10 @@
 "use client";
 
 import { ResumeCard } from "@/components/resume-card";
-import { Button } from "@/components/ui/button";
+import { StateAction, StatePanel } from "@/components/state-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ResumeSearchResult } from "@/lib/types";
-import { AlertCircle, Search } from "lucide-react";
+import { SearchX, ServerCrash, Sparkles } from "lucide-react";
 
 interface ResultsSectionProps {
   loading: boolean;
@@ -16,19 +16,27 @@ interface ResultsSectionProps {
   selectedIndex: number;
   onSelectIndex: (index: number) => void;
   onRetry?: () => void;
+  onClearFilters?: () => void;
+  onFocusSearch?: () => void;
 }
+
+const STAGGER_MS = 55;
+const MAX_STAGGER = 300;
 
 function ResultSkeletons() {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="space-y-3 rounded-xl border p-4">
+        <div
+          key={i}
+          className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm"
+          style={{ animationDelay: `${i * STAGGER_MS}ms` }}
+        >
           <Skeleton className="h-5 w-2/3" />
           <Skeleton className="h-4 w-1/2" />
           <div className="flex gap-2">
             <Skeleton className="h-5 w-16 rounded-full" />
             <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-14 rounded-full" />
           </div>
           <Skeleton className="h-16 w-full" />
         </div>
@@ -47,10 +55,12 @@ export function ResultsSection({
   selectedIndex,
   onSelectIndex,
   onRetry,
+  onClearFilters,
+  onFocusSearch,
 }: ResultsSectionProps) {
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true" aria-live="polite">
+      <div className="animate-fade-in space-y-4" aria-busy="true" aria-live="polite">
         <Skeleton className="h-4 w-48" />
         <ResultSkeletons />
       </div>
@@ -59,59 +69,70 @@ export function ResultsSection({
 
   if (error) {
     return (
-      <div
-        className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-14 text-center"
-        role="alert"
-      >
-        <AlertCircle className="mb-3 size-10 text-destructive" aria-hidden />
-        <h2 className="text-lg font-medium">Search failed</h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">{error}</p>
-        {onRetry && (
-          <Button type="button" variant="outline" className="mt-4" onClick={onRetry}>
-            Try again
-          </Button>
+      <div role="alert">
+        <StatePanel
+          icon={ServerCrash}
+          title="Search couldn&apos;t complete"
+          description={error}
+          className="border-destructive/20 bg-destructive/[0.02]"
+          iconClassName="bg-destructive/10 text-destructive"
+        >
+        {onRetry && <StateAction label="Try again" onClick={onRetry} />}
+        {onFocusSearch && (
+          <StateAction
+            label="Edit search"
+            variant="outline"
+            onClick={onFocusSearch}
+          />
         )}
+        </StatePanel>
       </div>
     );
   }
 
   if (!hasSearched) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 px-6 py-16 text-center">
-        <Search className="mb-4 size-10 text-muted-foreground" aria-hidden />
-        <h2 className="text-lg font-medium">Search resumes</h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          Enter a job description or keywords above. Use filters to narrow by
-          skills, graduation year, and major. Press ↑↓ to move between results
-          and Enter to open a profile.
-        </p>
-      </div>
+      <StatePanel
+        icon={Sparkles}
+        title="Start with a job description or skills"
+        description="Paste a role description or enter comma-separated skills. Use filters to require technologies, graduation years, or major. Keyboard: ↑↓ to browse results, Enter to open a profile."
+      >
+        {onFocusSearch && (
+          <StateAction label="Focus search" variant="secondary" onClick={onFocusSearch} />
+        )}
+      </StatePanel>
     );
   }
 
   if (results.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 px-6 py-16 text-center">
-        <h2 className="text-lg font-medium">No matches</h2>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          Try broader keywords, fewer skill filters, or a wider graduation year
-          range. The API requires a non-empty search query.
-        </p>
-      </div>
+      <StatePanel
+        icon={SearchX}
+        title="No candidates matched"
+        description="Your query and filters may be too strict. Try broader keywords, remove a skill requirement, or widen the graduation year range."
+      >
+        {onClearFilters && (
+          <StateAction
+            label="Clear filters"
+            variant="outline"
+            onClick={onClearFilters}
+          />
+        )}
+        {onFocusSearch && (
+          <StateAction label="Revise search" onClick={onFocusSearch} />
+        )}
+      </StatePanel>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="animate-fade-in space-y-4">
       {elapsedMs !== null && (
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{results.length}</span>{" "}
           {results.length === 1 ? "result" : "results"} in{" "}
-          <span className="font-medium text-foreground">{elapsedMs}ms</span>
-          <span className="hidden sm:inline text-muted-foreground">
-            {" "}
-            · ↑↓ navigate · Enter open
-          </span>
+          <span className="font-mono font-medium text-foreground">{elapsedMs}ms</span>
+          <span className="hidden sm:inline"> · ↑↓ navigate · Enter to open</span>
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2" role="listbox" aria-label="Search results">
@@ -127,6 +148,7 @@ export function ResultsSection({
               selected={index === selectedIndex}
               tabIndex={index === selectedIndex ? 0 : -1}
               onFocus={() => onSelectIndex(index)}
+              animationDelayMs={Math.min(index * STAGGER_MS, MAX_STAGGER)}
             />
           </div>
         ))}

@@ -43,6 +43,12 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        score: {
+          high: "hsl(var(--score-high))",
+          mid: "hsl(var(--score-mid))",
+          low: "hsl(var(--score-low))",
+        },
+        mark: "hsl(var(--mark))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -51,6 +57,21 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
+      keyframes: {
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fade-in-up 0.35s ease-out forwards",
+        "fade-in": "fade-in 0.25s ease-out forwards",
       },
     },
   },
