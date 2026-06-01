@@ -2,7 +2,15 @@
 TalentLens configuration — paths, model settings, and UI constants.
 """
 
+import os
 from pathlib import Path
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "")
 
 # ---------------------------------------------------------------------------
 # Paths (relative to the *project root*, i.e. TalentLens_Public/)
@@ -34,8 +42,8 @@ EMBEDDING_DIM = 384
 DEFAULT_TOP_K = 20
 MIN_SCORE_THRESHOLD = 0.0
 
-# Cross-encoder reranker (optional, loaded lazily in SearchEngine)
-RERANKER_ENABLED = True  # flip to True once a model is trained and saved
+# Cross-encoder reranker (optional; disable via TALENTLENS_RERANKER_ENABLED=0 on low-RAM hosts)
+RERANKER_ENABLED = _env_bool("TALENTLENS_RERANKER_ENABLED", True)
 RERANKER_MODEL_PATH = PROJECT_ROOT / "models" / "talentlens-cross-encoder-sft-v1"
 
 # ---------------------------------------------------------------------------
