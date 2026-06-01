@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/talentlens",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/talentlens/api/:path*",
+      "destination": "https://talentlenspublic-production.up.railway.app/api/:path*"
+    }
+  ]
+}

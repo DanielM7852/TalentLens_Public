@@ -625,6 +625,9 @@ class SearchEngine:
         min_score: float = MIN_SCORE_THRESHOLD,
         skill_filters: list[str] | None = None,
         grad_year_filter: str | None = None,
+        grad_year_min: int | None = None,
+        grad_year_max: int | None = None,
+        role_type_filter: str | None = None,
         major_filter: str | None = None,
         input_mode: str = "Skills",
         api_key: str | None = None,
@@ -634,7 +637,16 @@ class SearchEngine:
     ) -> list[ResumeResult]:
         self.last_query_analysis = None
         if self.demo_mode:
-            return self._search_demo(query, top_k, skill_filters, grad_year_filter, major_filter)
+            return self._search_demo(
+                query,
+                top_k,
+                skill_filters,
+                grad_year_filter,
+                major_filter,
+                grad_year_min=grad_year_min,
+                grad_year_max=grad_year_max,
+                role_type_filter=role_type_filter,
+            )
         if input_mode == "Job Description":
             return self._search_job_description(
                 query,
@@ -646,12 +658,99 @@ class SearchEngine:
                 recruiter_company,
                 recruiter_job_title,
                 progress_callback,
+                skill_filters=skill_filters,
+                grad_year_min=grad_year_min,
+                grad_year_max=grad_year_max,
+                role_type_filter=role_type_filter,
             )
         self._emit_progress(progress_callback, 0.1, "Matching skill filters")
-        results = self._search_skills(query, top_k, min_score, skill_filters, grad_year_filter, major_filter)
+        results = self._search_skills(
+            query,
+            top_k,
+            min_score,
+            skill_filters,
+            grad_year_filter,
+            major_filter,
+            grad_year_min=grad_year_min,
+            grad_year_max=grad_year_max,
+            role_type_filter=role_type_filter,
+        )
         results = self._dedupe_results(results)
         self._emit_progress(progress_callback, 1.0, "Search complete")
         return results
+
+    def _infer_role_type(self, profile: dict) -> str:
+        """Heuristic role bucket for API filters: intern, new_grad, or experienced."""
+        combined = str(profile.get("combined_text", "")).lower()
+        if re.search(r"\bintern\b", combined):
+            return "intern"
+        years = profile.get("estimated_years_experience")
+        grad_raw = str(profile.get("graduation_year", "")).strip()
+        try:
+            grad_year = int(grad_raw) if grad_raw else None
+        except ValueError:
+            grad_year = None
+        current_year = pd.Timestamp.now().year
+        if years is not None and float(years) >= 2.0:
+            return "experienced"
+        if grad_year is not None and grad_year <= current_year - 2:
+            return "experienced"
+        return "new_grad"
+
+    def _apply_post_retrieval_filters(
+        self,
+        results: list[ResumeResult],
+        *,
+        skill_filters: list[str] | None = None,
+        grad_year_min: int | None = None,
+        grad_year_max: int | None = None,
+        role_type_filter: str | None = None,
+        major_filter: str | None = None,
+    ) -> list[ResumeResult]:
+        """Apply API sidebar filters after retrieval/aggregation and before reranking."""
+        if not results:
+            return results
+        role_type_filter = (role_type_filter or "").strip().lower()
+        if role_type_filter in {"", "all"}:
+            role_type_filter = None
+        major_filter = (major_filter or "").strip()
+        if not any([skill_filters, grad_year_min, grad_year_max, role_type_filter, major_filter]):
+            return results
+
+        filtered: list[ResumeResult] = []
+        for result in results:
+            candidate_id = result.candidate_id or result.filename
+            profile = self._get_candidate_profile(candidate_id)
+            combined = str(profile.get("combined_text", ""))
+
+            if skill_filters:
+                matched = extract_matched_skills(combined, skill_filters)
+                if len(matched) < len(skill_filters):
+                    continue
+
+            major_text = str(profile.get("major", result.major or ""))
+            if major_filter and major_filter.lower() not in major_text.lower():
+                continue
+
+            grad_raw = str(profile.get("graduation_year", result.graduation_year or "")).strip()
+            try:
+                grad_year = int(grad_raw) if grad_raw else None
+            except ValueError:
+                grad_year = None
+
+            if grad_year_min is not None or grad_year_max is not None:
+                if grad_year is None:
+                    continue
+                if grad_year_min is not None and grad_year < grad_year_min:
+                    continue
+                if grad_year_max is not None and grad_year > grad_year_max:
+                    continue
+
+            if role_type_filter and self._infer_role_type(profile) != role_type_filter:
+                continue
+
+            filtered.append(result)
+        return filtered
 
     def _search_job_description(
         self,
@@ -664,6 +763,10 @@ class SearchEngine:
         recruiter_company: str | None = None,
         recruiter_job_title: str | None = None,
         progress_callback: ProgressCallback | None = None,
+        skill_filters: list[str] | None = None,
+        grad_year_min: int | None = None,
+        grad_year_max: int | None = None,
+        role_type_filter: str | None = None,
     ) -> list[ResumeResult]:
         self._emit_progress(progress_callback, 0.05, "Parsing job description")
         parsed = apply_recruiter_overrides(
@@ -683,6 +786,14 @@ class SearchEngine:
             min_score=min_score,
             grad_year_filter=grad_year_filter,
             major_filter=major_filter,
+        )
+        results = self._apply_post_retrieval_filters(
+            results,
+            skill_filters=skill_filters,
+            grad_year_min=grad_year_min,
+            grad_year_max=grad_year_max,
+            role_type_filter=role_type_filter,
+            major_filter=major_filter or None,
         )
         self.last_query_analysis = {
             **parsed.to_dict(),
@@ -722,6 +833,9 @@ class SearchEngine:
         skill_filters: list[str] | None,
         grad_year_filter: str | None,
         major_filter: str | None,
+        grad_year_min: int | None = None,
+        grad_year_max: int | None = None,
+        role_type_filter: str | None = None,
     ) -> list[ResumeResult]:
         query_skills = [s.strip() for s in query.split(",") if s.strip()]
         if skill_filters:
@@ -784,6 +898,14 @@ class SearchEngine:
 
         scored_rows.sort(key=lambda item: item.score, reverse=True)
         top_results = self._dedupe_results(scored_rows)[:top_k]
+        top_results = self._apply_post_retrieval_filters(
+            top_results,
+            skill_filters=skill_filters,
+            grad_year_min=grad_year_min,
+            grad_year_max=grad_year_max,
+            role_type_filter=role_type_filter,
+            major_filter=major_filter,
+        )
 
         if self.reranker_loaded and self.reranker is not None and top_results:
             top_results = self._rerank(query, top_results)
@@ -1817,6 +1939,9 @@ class SearchEngine:
         skill_filters: list[str] | None,
         grad_year_filter: str | None,
         major_filter: str | None,
+        grad_year_min: int | None = None,
+        grad_year_max: int | None = None,
+        role_type_filter: str | None = None,
     ) -> list[ResumeResult]:
         query_skills = [s.strip() for s in query.split(",") if s.strip()]
         if skill_filters:
@@ -1853,6 +1978,14 @@ class SearchEngine:
                 )
             )
         results.sort(key=lambda item: item.score, reverse=True)
+        results = self._apply_post_retrieval_filters(
+            results,
+            skill_filters=skill_filters,
+            grad_year_min=grad_year_min,
+            grad_year_max=grad_year_max,
+            role_type_filter=role_type_filter,
+            major_filter=major_filter or None,
+        )
         for i, item in enumerate(results[:top_k], 1):
             item.rank = i
         return results[:top_k]
