@@ -29,10 +29,7 @@ export function highlightSnippet(text: string, query: string): ReactNode {
     );
     if (isMatch) {
       return (
-        <mark
-          key={`${part}-${index}`}
-          className="rounded-sm bg-primary/20 px-0.5 font-medium text-foreground dark:bg-primary/30"
-        >
+        <mark key={`${part}-${index}`} className="query-highlight">
           {part}
         </mark>
       );
